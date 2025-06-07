@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Hamming SEC-DED Simülatörü</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <h1>Hamming SEC-DED Simülatörü</h1>
+
+  <div>
+    <label for="bitLength">Bit Uzunluğu:</label>
+    <select id="bitLength" onchange="updateBitLength()">
+      <option value="8" selected>8 bit</option>
+      <option value="16">16 bit</option>
+      <option value="32">32 bit</option>
+    </select>
+  </div>
+
+  <div style="margin-top: 15px;">
+    <label for="dataInput">Veri:</label>
+    <input
+      type="text"
+      id="dataInput"
+      placeholder="Örn: 10110011"
+      maxlength="8"
+      autocomplete="off"
+      spellcheck="false"
+    />
+    <button onclick="encode()">Kodla ve Belleğe Yaz</button>
+  </div>
+
+  <h3>Bellek:</h3>
+  <div class="memory-box" id="memory"></div>
+
+  <div style="margin-top: 20px;">
+    <button onclick="randomSingleError()">Rastgele Tek Hata Ekle</button>
+    <button onclick="randomDoubleError()">Rastgele Çift Hata Ekle</button>
+  </div>
+
+  <div style="margin-top: 10px;">
+    <button onclick="checkError()">Kontrol Et ve Düzelt</button>
+  </div>
+
+  <h3>Hamming Kodu:</h3>
+  <div id="hammingCode" style="font-family: monospace; font-size: 18px;"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
