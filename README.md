@@ -4,17 +4,7 @@ Bu proje, **Hamming SEC-DED (Single Error Correction, Double Error Detection)** 
 
 ## 🚀 Canlı Demo
 
-📺 YouTube Tanıtım Videosu: [Videoyu buraya ekle](https://www.youtube.com/...)
-
-📷 Proje Görselleri:
-
-| Bellek Görünümü | Hata Sonrası Görünüm |
-|------------------|-----------------------|
-| ![memory-clean](link/bellek-temiz.png) | ![memory-error](link/hata-eklenmiş.png) |
-
-> Görselleri `docs/assets` klasöründe saklaman ve `README.md` içerisinde bağlantı vermen önerilir.
-
----
+📺 YouTube Tanıtım Videosu: [https://youtu.be/WitMB4Nh2DE]
 
 ## 🧠 Algoritma Detayları
 
