@@ -1,16 +1,16 @@
-let memoryData = []; // Hamming kodlu veri (array of numbers)
-let originalMemoryData = []; // Hata eklenmeden önceki orijinal Hamming kodlu veri (array of numbers)
-let errorPositions = []; // Hatalı bit pozisyonları (0-indexed)
+let memoryData = []; // Bellekteki mevcut Hamming kodlu veri
+let originalMemoryData = []; // Hatalar eklenmeden önceki orijinal Hamming verisi
+let errorPositions = []; // Tespit edilen hatalı bit konumları
 
-// Bit uzunluğu değiştikçe arayüzü ve değişkenleri günceller
+// Bit uzunluğu değiştiğinde giriş alanı ve bellek durumu güncellenir
 function updateBitLength() {
     const bitLength = parseInt(document.getElementById('bitLength').value);
     const dataInput = document.getElementById('dataInput');
     dataInput.maxLength = bitLength;
     dataInput.placeholder = `Örn: ${'0'.repeat(bitLength)}`;
-    dataInput.value = ''; // Input'u temizle
-    
-    // Verileri sıfırla ve ekranı temizle
+    dataInput.value = '';
+
+    // Belleği ve arayüzü temizle
     memoryData = [];
     originalMemoryData = [];
     errorPositions = [];
@@ -18,59 +18,56 @@ function updateBitLength() {
     document.getElementById('hammingCode').textContent = '';
 }
 
-// Hamming SEC-DED parite biti sayısı hesaplama
+// Belirtilen veri uzunluğuna göre gerekli parite biti sayısını hesaplar
 function calculateParityBits(dataLength) {
     let r = 0;
-    // 2^r >= m + r + 1 formülü (burada +1 overall parity için)
+    // 2^r >= m + r + 1 kuralına göre uygun r bulunur
     while (Math.pow(2, r) < dataLength + r + 1) {
         r++;
     }
     return r;
 }
 
-// Veriyi ve parite bitlerini yerleştirip Hamming kodu üretme
+// Girilen veriye Hamming SEC-DED algoritmasını uygulayarak kodlama işlemi yapar
 function applyHammingSECDED(dataBits) {
     const m = dataBits.length;
-    const r = calculateParityBits(m); // Gerekli parite bitleri sayısı
-    const totalLength = m + r + 1; // Toplam uzunluk (veri + parite + genel parite)
+    const r = calculateParityBits(m);
+    const totalLength = m + r + 1; // +1: genel parite biti
     let encoded = Array(totalLength).fill(0);
 
-    // Veri bitlerini parite bit pozisyonları hariç yerleştir (1-indexed düşünerek)
+    // Veri bitlerini pozisyonlara yerleştir
     let dataIdx = 0;
     for (let i = 1; i <= totalLength; i++) {
-        // i bir 2'nin kuvveti değilse (parite bit pozisyonu değilse)
         if ((i & (i - 1)) !== 0) {
-            if (dataIdx < m) { // Veri bitleri tükenmediyse
+            if (dataIdx < m) {
                 encoded[i - 1] = dataBits[dataIdx++];
             }
         }
     }
 
-    // Parite bitlerini hesapla ve yerleştir
+    // Her bir parite biti için kontrol ettiği bitlerin XOR toplamı alınır
     for (let i = 0; i < r; i++) {
-        const parityPos = Math.pow(2, i); // 1, 2, 4, 8, ...
+        const parityPos = Math.pow(2, i);
         let parity = 0;
-        // Parite bitinin kontrol ettiği tüm pozisyonları tara
-        for (let k = 1; k <= totalLength - 1; k++) { // Genel parite bitini dahil etme
-            if ((k & parityPos) !== 0) { // k'nın ikili gösteriminde parityPos bit'i 1 ise
-                parity ^= encoded[k - 1]; // XOR işlemi yap
+        for (let k = 1; k <= totalLength - 1; k++) {
+            if ((k & parityPos) !== 0) {
+                parity ^= encoded[k - 1];
             }
         }
-        encoded[parityPos - 1] = parity; // Parite bitini ilgili pozisyona yerleştir
+        encoded[parityPos - 1] = parity;
     }
 
-    // Genel parite bitini (overall parity) hesapla ve en sona yerleştir
-    // Tüm kodlanmış verinin (genel parite biti hariç) XOR toplamı
+    // Genel parite biti hesaplanır ve dizinin sonuna eklenir
     let overallParity = 0;
-    for (let i = 0; i < totalLength - 1; i++) { // Son bit hariç tüm bitleri dahil et
+    for (let i = 0; i < totalLength - 1; i++) {
         overallParity ^= encoded[i];
     }
-    encoded[totalLength - 1] = overallParity; // En son pozisyona yerleştir
+    encoded[totalLength - 1] = overallParity;
 
     return encoded;
 }
 
-// Kullanıcıdan gelen veriyi doğrula
+// Kullanıcı tarafından girilen verinin geçerliliğini kontrol eder
 function validateInput(dataStr, bitLength) {
     if (dataStr.length !== bitLength) {
         alert(`Lütfen ${bitLength} bit uzunluğunda veri giriniz.`);
@@ -83,7 +80,7 @@ function validateInput(dataStr, bitLength) {
     return true;
 }
 
-// Veriyi kodlar ve belleğe yazar
+// Veriyi kodlayarak belleğe kaydeder
 function encode() {
     const bitLength = parseInt(document.getElementById('bitLength').value);
     const dataStr = document.getElementById('dataInput').value.trim();
@@ -93,16 +90,15 @@ function encode() {
     const dataBits = dataStr.split('').map(Number);
     const encoded = applyHammingSECDED(dataBits);
 
-    // Orijinal ve anlık bellek verisini ayarla
-    originalMemoryData = [...encoded]; // Orijinal halini sakla
-    memoryData = [...encoded]; // Hata eklemek için kopyala
-    errorPositions = []; // Hata pozisyonlarını temizle
+    originalMemoryData = [...encoded];
+    memoryData = [...encoded];
+    errorPositions = [];
 
     updateMemoryDisplay();
     updateHammingCodeDisplay();
 }
 
-// Bellekteki veriyi görselleştir (bitleri yatay kutucuklarla)
+// Bellekteki veriyi arayüzde görsel olarak günceller
 function updateMemoryDisplay() {
     const memoryDiv = document.getElementById('memory');
     memoryDiv.innerHTML = '';
@@ -111,7 +107,6 @@ function updateMemoryDisplay() {
     memoryData.forEach((bit, idx) => {
         const span = document.createElement('span');
         span.classList.add('bit');
-        // Hata pozisyonları 0-indexed olduğu için direkt kullanırız
         if (errorPositions.includes(idx)) {
             span.classList.add('error');
         }
@@ -120,7 +115,7 @@ function updateMemoryDisplay() {
     });
 }
 
-// Hamming kodunu metin olarak gösterir
+// Hamming kodunu metin olarak günceller
 function updateHammingCodeDisplay() {
     if (!memoryData || memoryData.length === 0) {
         document.getElementById('hammingCode').textContent = '';
@@ -129,26 +124,25 @@ function updateHammingCodeDisplay() {
     document.getElementById('hammingCode').textContent = memoryData.join('');
 }
 
-// Rastgele tek bit hata ekler
+// Belleğe rastgele tek bitlik hata uygular
 function randomSingleError() {
     if (!memoryData || memoryData.length === 0) {
         alert('Önce "Kodla ve Belleğe Yaz" butonuna basın.');
         return;
     }
-    clearErrors(); // Önceki hataları temizle ve orijinal veriye dön
+    clearErrors();
 
     const totalBits = memoryData.length;
-    const errorBitIndex = Math.floor(Math.random() * totalBits); // 0-indexed
-    
-    // Biti tersine çevir
+    const errorBitIndex = Math.floor(Math.random() * totalBits);
+
     memoryData[errorBitIndex] = memoryData[errorBitIndex] === 0 ? 1 : 0;
-    errorPositions.push(errorBitIndex); // Hatalı pozisyonu kaydet
+    errorPositions.push(errorBitIndex);
 
     updateMemoryDisplay();
     updateHammingCodeDisplay();
 }
 
-// Rastgele çift bit hata ekler
+// Belleğe rastgele iki bitlik hata uygular
 function randomDoubleError() {
     if (!memoryData || memoryData.length === 0) {
         alert('Önce "Kodla ve Belleğe Yaz" butonuna basın.');
@@ -158,36 +152,34 @@ function randomDoubleError() {
         alert('Çift hata eklemek için en az 2 bit olmalıdır.');
         return;
     }
-    clearErrors(); // Önceki hataları temizle ve orijinal veriye dön
+    clearErrors();
 
     const totalBits = memoryData.length;
-    let errorBitIndex1 = Math.floor(Math.random() * totalBits); // 0-indexed
+    let errorBitIndex1 = Math.floor(Math.random() * totalBits);
     let errorBitIndex2;
     do {
         errorBitIndex2 = Math.floor(Math.random() * totalBits);
-    } while (errorBitIndex2 === errorBitIndex1); // Aynı bit olmaması için kontrol
+    } while (errorBitIndex2 === errorBitIndex1);
 
-    // Bitleri tersine çevir
-    memoryData[errorBitIndex1] = memoryData[errorBitIndex1] === 0 ? 1 : 0;
-    memoryData[errorBitIndex2] = memoryData[errorBitIndex2] === 0 ? 1 : 0;
-    
-    // Hatalı pozisyonları kaydet
+    memoryData[errorBitIndex1] ^= 1;
+    memoryData[errorBitIndex2] ^= 1;
+
     errorPositions.push(errorBitIndex1, errorBitIndex2);
 
     updateMemoryDisplay();
     updateHammingCodeDisplay();
 }
 
-// Belleği orijinal haline döndürür ve hataları temizler
+// Belleği orijinal haline döndürür, hataları siler
 function clearErrors() {
     if (!originalMemoryData || originalMemoryData.length === 0) return;
-    memoryData = [...originalMemoryData]; // Orijinal veriye geri dön
-    errorPositions = []; // Hata pozisyonlarını temizle
-    updateMemoryDisplay(); // Ekranı güncelle
-    updateHammingCodeDisplay(); // Hamming kodu gösterimini güncelle
+    memoryData = [...originalMemoryData];
+    errorPositions = [];
+    updateMemoryDisplay();
+    updateHammingCodeDisplay();
 }
 
-// Sendromu hesaplar ve hata varsa pozisyonlarını tespit edip düzeltir
+// Hamming sendromunu analiz eder, hatayı tespit eder ve gerekirse düzeltir
 function checkError() {
     if (!memoryData || memoryData.length === 0) {
         alert('Önce "Kodla ve Belleğe Yaz" butonuna basın.');
@@ -195,21 +187,16 @@ function checkError() {
     }
 
     const totalLength = memoryData.length;
-    // calculateParityBits fonksiyonunun içinde veri bit sayısı (m) + parite bit sayısı (r) + 1 (genel parite) toplam uzunluğunu kullandığımız için,
-    // burada r'yi tekrar hesaplarken toplam uzunluktan (m + r + 1) genel pariteyi (-1) ve kendi parite bit sayısını (-r) çıkararak
-    // yaklaşık veri bit sayısına (m) ulaşmaya çalışıyoruz.
-    // Daha doğru bir hesaplama için, encodeHamming fonksiyonu içinde m'yi (original dataLength) global bir değişkende tutmak daha iyi olabilir.
-    // Ancak mevcut yapıda, şu anki r hesaplaması (totalLength - r - 1) işe yarayabilir.
-    const r = calculateParityBits(totalLength - 1); // Genel parite hariç uzunluğa göre r'yi buluruz
-
+    const r = calculateParityBits(totalLength - 1);
     let syndrome = 0;
-    // Sendrom bitlerini hesapla (genel parite biti hariç)
+
+    // Sendrom bitlerini hesapla
     for (let i = 0; i < r; i++) {
-        const parityPos = Math.pow(2, i); // 1, 2, 4, 8, ...
+        const parityPos = Math.pow(2, i);
         let parity = 0;
-        for (let k = 1; k <= totalLength - 1; k++) { // Genel parite biti hariç tüm bitleri tara (1-indexed k)
+        for (let k = 1; k <= totalLength - 1; k++) {
             if ((k & parityPos) !== 0) {
-                parity ^= memoryData[k - 1]; // 0-indexed array'e uygun olarak k-1
+                parity ^= memoryData[k - 1];
             }
         }
         if (parity !== 0) {
@@ -217,50 +204,39 @@ function checkError() {
         }
     }
 
-    // Genel parite bitini kontrol et
+    // Genel parite biti kontrolü
     let calculatedOverallParity = 0;
-    for (let i = 0; i < totalLength - 1; i++) { // Genel parite biti hariç tüm bitleri tara
+    for (let i = 0; i < totalLength - 1; i++) {
         calculatedOverallParity ^= memoryData[i];
     }
-    const actualOverallParity = memoryData[totalLength - 1]; // Gerçek genel parite biti
-
+    const actualOverallParity = memoryData[totalLength - 1];
     const overallParityError = (calculatedOverallParity !== actualOverallParity);
 
-    // Hata durumlarını analiz et ve düzelt
+    // Hata durumlarını yorumla ve gerekli düzeltmeyi yap
     if (syndrome === 0 && !overallParityError) {
         alert('Hata yok, veri doğru.');
-        errorPositions = []; // Hata olmadığı için pozisyonları temizle
-        updateMemoryDisplay(); // Ekranı güncelle
+        errorPositions = [];
+        updateMemoryDisplay();
     } else if (syndrome !== 0 && overallParityError) {
-        // Tek hata (düzeltilebilir)
-        const errorIndex = syndrome - 1; // Sendrom 1-indexed, array 0-indexed
-
-        // Hatalı biti düzelt
-        memoryData[errorIndex] = memoryData[errorIndex] === 0 ? 1 : 0;
-
+        const errorIndex = syndrome - 1;
+        memoryData[errorIndex] ^= 1;
         alert(`Tek bit hatası tespit edildi ve düzeltildi. Hatalı bit pozisyonu: ${syndrome} (1-indexed).`);
-        errorPositions = []; // Hata düzeltildiği için pozisyonu temizle
-        updateMemoryDisplay(); // Ekranı güncelle
+        errorPositions = [];
+        updateMemoryDisplay();
     } else if (syndrome !== 0 && !overallParityError) {
-        // Çift hata (tespit edildi ama düzeltilemez)
         alert('Çift hata tespit edildi, düzeltilemez.');
-        // errorPositions zaten çift hatayı içeriyorsa olduğu gibi kalır,
-        // yeni bir hata eklenirse bu fonksiyon çağrılmadan önce temizlenir.
     } else if (syndrome === 0 && overallParityError) {
-        // Genel parite bitinin kendisinde tek hata
-        const errorIndex = totalLength - 1; // Genel parite bitinin pozisyonu
-
-        // Hatalı biti düzelt
-        memoryData[errorIndex] = memoryData[errorIndex] === 0 ? 1 : 0;
-
-        alert(`Genel parite bitinde tek hata tespit edildi ve düzeltildi. Hatalı bit pozisyonu: ${totalLength} (1-indexed).`);
-        errorPositions = []; // Hata düzeltildiği için pozisyonu temizle
-        updateMemoryDisplay(); // Ekranı güncelle
+        const errorIndex = totalLength - 1;
+        memoryData[errorIndex] ^= 1;
+        alert(`Genel parite bitinde hata tespit edildi ve düzeltildi. Pozisyon: ${totalLength} (1-indexed).`);
+        errorPositions = [];
+        updateMemoryDisplay();
     } else {
         alert('Bilinmeyen durum oluştu.');
     }
-    updateHammingCodeDisplay(); // Hamming kodu gösterimini güncelle
+
+    updateHammingCodeDisplay();
 }
 
-// Sayfa ilk yüklendiğinde input placeholder ve maxlength ayarı
+// Sayfa yüklendiğinde başlangıç bit uzunluğu ayarlanır
 window.onload = updateBitLength;
