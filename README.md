@@ -2,6 +2,9 @@
 
 Bu proje, **Hamming SEC-DED (Single Error Correction, Double Error Detection)** algoritmasını kullanarak veriyi kodlayan, rastgele hatalar ekleyen, hataları tespit eden ve düzelten interaktif bir web uygulamasıdır. Kullanıcılar veri girebilir, Hamming kodlamasını görebilir, bellekteki veriye tek veya çift bitlik hata ekleyebilir ve hataları analiz edip düzeltebilir.
 
+## 🔗 Projeyi Canlı Görüntüleyin
+[➡️ Uygulamayı Açmak İçin Tıklayın](https://elifnurbeycan.github.io/Hamming-SEC-DEC-CodeSim/)
+
 ## 🚀 Canlı Demo
 
 📺 YouTube Tanıtım Videosu: [https://youtu.be/WitMB4Nh2DE]
